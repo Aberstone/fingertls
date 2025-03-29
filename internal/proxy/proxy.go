@@ -1,0 +1,162 @@
+package proxy
+
+import (
+	"context"
+	"crypto/tls"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+
+	"github.com/elazarl/goproxy"
+
+	"tls_mitm_server/internal/errors"
+)
+
+// Proxy 代理服务器实现
+type Proxy struct {
+	opts *Options
+
+	httpProxy    *goproxy.ProxyHttpServer
+	listener     net.Listener
+	ctx          context.Context
+	cancel       context.CancelFunc
+	httpHandler  RequestHandler
+	httpsHandler RequestHandler
+}
+
+// NewProxy 创建新的代理服务器
+func NewProxy(opts ...Option) (*Proxy, error) {
+	// 应用默认选项
+	options := DefaultOptions()
+	// 应用自定义选项
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	// 验证选项
+	if err := validateOptions(options); err != nil {
+		return nil, err
+	}
+
+	// 创建根上下文
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// 创建上游代理transport
+	var transport *http.Transport
+	if options.UpstreamProxy != nil {
+		transport = &http.Transport{
+			Proxy: http.ProxyURL(options.UpstreamProxy),
+		}
+	} else {
+		transport = &http.Transport{}
+	}
+
+	proxy := &Proxy{
+		opts:   options,
+		ctx:    ctx,
+		cancel: cancel,
+	}
+
+	// 初始化请求处理器
+	proxy.httpHandler = NewHTTPHandler(transport, options.Logger)
+	proxy.httpsHandler = NewHTTPSHandler(options.TLSDialer, options.Logger)
+
+	// 初始化HTTP代理
+	if err := proxy.initHTTPProxy(); err != nil {
+		return nil, err
+	}
+
+	return proxy, nil
+}
+
+// validateOptions 验证选项
+func validateOptions(opts *Options) error {
+	if opts.Port <= 0 || opts.Port > 65535 {
+		return errors.NewError(errors.ErrConfiguration, "无效的端口号", nil)
+	}
+
+	if opts.CACert == nil || opts.CAKey == nil {
+		return errors.NewError(errors.ErrConfiguration, "未提供CA证书和私钥", nil)
+	}
+
+	return nil
+}
+
+// initHTTPProxy 初始化HTTP代理
+func (p *Proxy) initHTTPProxy() error {
+	p.httpProxy = goproxy.NewProxyHttpServer()
+
+	// 使用自定义logger替换goproxy的默认logger
+	p.httpProxy.Logger = newGoproxyLogger(p.opts.Logger)
+
+	p.httpProxy.Verbose = p.opts.Verbose
+
+	// 加载CA证书
+	ca, err := tls.X509KeyPair(p.opts.CACert, p.opts.CAKey)
+	if err != nil {
+		return errors.NewError(errors.ErrCertificate, "加载CA证书失败", err)
+	}
+
+	goproxy.GoproxyCa = ca
+	p.httpProxy.OnRequest().HandleConnect(goproxy.AlwaysMitm)
+
+	// 请求拦截器
+	p.httpProxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		var resp *http.Response
+		var err error
+
+		// 根据请求类型选择处理器
+		if req.URL.Scheme == "https" || req.Method == "CONNECT" {
+			resp, err = p.httpsHandler.HandleRequest(req)
+		} else {
+			resp, err = p.httpHandler.HandleRequest(req)
+		}
+
+		if err != nil {
+			p.opts.Logger.Error("请求处理失败", err)
+			return req, goproxy.NewResponse(req, goproxy.ContentTypeText, http.StatusInternalServerError, "Internal Server Error")
+		}
+
+		return req, resp
+	})
+
+	return nil
+}
+
+// Start 启动代理服务器
+func (p *Proxy) Start(ctx context.Context) error {
+	addr := fmt.Sprintf(":%d", p.opts.Port)
+
+	p.opts.Logger.Info(fmt.Sprintf("[MITM_SERVER] 开始监听端口: %d", p.opts.Port))
+
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return errors.NewError(errors.ErrNetwork, "启动监听失败", err)
+	}
+	p.listener = listener
+
+	// 启动HTTP代理服务器
+	go http.Serve(listener, p.httpProxy)
+
+	return nil
+}
+
+// Stop 停止代理服务器
+func (p *Proxy) Stop(ctx context.Context) error {
+	p.opts.Logger.Info("[MITM_SERVER] 停止代理服务器")
+
+	p.cancel()
+	if p.listener != nil {
+		return p.listener.Close()
+	}
+	return nil
+}
+
+// GetProxyURL 获取代理URL
+func (p *Proxy) GetProxyURL() *url.URL {
+	return &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("localhost:%d", p.opts.Port),
+	}
+}
