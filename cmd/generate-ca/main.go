@@ -21,8 +21,8 @@ import (
 	"flag"
 	"log"
 
-	"tls_mitm_server/internal/cert"
-	"tls_mitm_server/internal/errors"
+	"github.com/aberstone/tls_mitm_server/internal/cert"
+	"github.com/aberstone/tls_mitm_server/internal/errors"
 )
 
 var (

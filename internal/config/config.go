@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"tls_mitm_server/internal/errors"
+	"github.com/aberstone/tls_mitm_server/internal/errors"
 )
 
 // TLSConfig TLS配置

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strings"
 
-	"tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/internal/logging"
 )
 
 // Logger 封装代理服务器的日志功能

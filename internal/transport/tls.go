@@ -27,8 +27,8 @@ import (
 	"strings"
 	"time"
 
-	"tls_mitm_server/internal/interfaces"
-	"tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/internal/interfaces"
+	"github.com/aberstone/tls_mitm_server/internal/logging"
 
 	utls "github.com/refraction-networking/utls"
 )

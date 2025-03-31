@@ -24,8 +24,8 @@ import (
 	"net"
 	"net/http"
 
-	"tls_mitm_server/internal/interfaces"
-	"tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/internal/interfaces"
+	"github.com/aberstone/tls_mitm_server/internal/logging"
 
 	utls "github.com/refraction-networking/utls"
 	"golang.org/x/net/http2"
