@@ -27,7 +27,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"tls_mitm_server/internal/config"
+	"github.com/aberstone/tls_mitm_server/internal/config"
 )
 
 // Logger 封装日志记录器

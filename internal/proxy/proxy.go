@@ -27,7 +27,7 @@ import (
 
 	"github.com/elazarl/goproxy"
 
-	"tls_mitm_server/internal/errors"
+	"github.com/aberstone/tls_mitm_server/internal/errors"
 )
 
 // Proxy 代理服务器实现

@@ -27,8 +27,8 @@ import (
 	"os"
 	"time"
 
-	"tls_mitm_server/internal/errors"
-	"tls_mitm_server/internal/interfaces"
+	"github.com/aberstone/tls_mitm_server/internal/errors"
+	"github.com/aberstone/tls_mitm_server/internal/interfaces"
 )
 
 // Generator CA证书生成器

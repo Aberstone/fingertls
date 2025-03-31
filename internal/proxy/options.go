@@ -20,8 +20,8 @@ package proxy
 import (
 	"net/url"
 
-	"tls_mitm_server/internal/interfaces"
-	"tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/internal/interfaces"
+	"github.com/aberstone/tls_mitm_server/internal/logging"
 )
 
 // Options 代理服务器选项

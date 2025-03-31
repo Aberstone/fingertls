@@ -29,11 +29,11 @@ import (
 	"syscall"
 	"time"
 
-	"tls_mitm_server/internal/config"
-	"tls_mitm_server/internal/fingerprint"
-	"tls_mitm_server/internal/logging"
-	"tls_mitm_server/internal/proxy"
-	"tls_mitm_server/internal/transport"
+	"github.com/aberstone/tls_mitm_server/internal/config"
+	"github.com/aberstone/tls_mitm_server/internal/fingerprint"
+	"github.com/aberstone/tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/internal/proxy"
+	"github.com/aberstone/tls_mitm_server/internal/transport"
 
 	utls "github.com/refraction-networking/utls"
 )
