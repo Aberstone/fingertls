@@ -2,13 +2,13 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.1--alpha-orange.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.2.0--alpha-orange.svg)](VERSION)
 
 一个基于Go实现的MITM代理服务器，支持自定义TLS指纹和多级代理链。
 
 ## 版本说明
 
-当前版本：[v0.1.1-alpha](VERSION)
+当前版本：[v0.2.0-alpha](VERSION)
 
 - [版本管理规范](VERSIONING.md)
 - [更新日志](CHANGELOG.md)
@@ -20,7 +20,7 @@
 - ✨ 中间人代理服务器，支持拦截和处理HTTP及HTTPS流量
 - 🔑 基于自签名CA证书的TLS会话拦截
 - 🎭 可自定义TLS Client Hello指纹，支持多种预设配置
-- ⛓️ 灵活的代理链配置，支持HTTP上游代理
+- ⛓️ 灵活的代理链配置，支持HTTP和SOCKS5上游代理
 - 📝 结构化日志记录，支持多种输出格式
 - 🚀 异步处理设计，高效的请求处理
 - 🔧 完善的配置选项和命令行参数支持
@@ -73,7 +73,7 @@ Usage of ./build/mitm:
   --ca-cert string      CA证书路径 (默认 "ca.crt")
   --ca-key string       CA私钥路径 (默认 "ca.key")
   --fingerprint string  TLS指纹类型 (default, chrome, firefox等)
-  --upstream string     上游代理URL (可选)
+  --upstream string     上游代理URL (可选，支持HTTP和SOCKS5)
   --log-level string   日志级别 (debug, info, warn, error)
   --log-format string  日志格式 (text, json)
   --verbose            显示详细日志
