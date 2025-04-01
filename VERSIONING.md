@@ -56,8 +56,8 @@
 4. 进行测试和bug修复
 
 ### 2. 完成发布
-1. 将`release/vX.Y.Z`合并到`main`
-2. 在`main`上打标签`vX.Y.Z`
+1. 将`release/vX.Y.Z`合并到`master`
+2. 在`master`上打标签`vX.Y.Z`
 3. 将`release/vX.Y.Z`合并回`develop`
 4. 删除`release/vX.Y.Z`分支
 
