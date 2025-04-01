@@ -90,9 +90,21 @@ graph TD
     C --> D[HTTP请求]
     C --> E[HTTPS请求]
     E --> F[TLS拦截]
+
+    subgraph TLS Transport
     F --> G[TLS指纹模拟]
-    D --> H[上游代理]
-    G --> H
+    G --> H[TLS拨号器]
+    H --> I{ProxyConnector}
+    I --> J[直连]
+    I --> K[上游代理]
+    end
+
+    subgraph 上游代理实现
+    K --> L[HTTP代理]
+    K --> M[SOCKS5代理]
+    end
+
+    D --> K
 ```
 
 ### 关键特性
@@ -100,7 +112,8 @@ graph TD
 1. 模块化设计
    - 请求处理器接口
    - TLS指纹定制组件
-   - 代理链路处理
+   - 代理连接器抽象
+   - 可扩展的上游代理支持
    - 可扩展的日志系统
 
 2. 高性能实现
