@@ -2,13 +2,13 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0--alpha-orange.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.2.1--alpha-orange.svg)](VERSION)
 
 一个基于Go实现的MITM代理服务器，支持自定义TLS指纹和多级代理链。
 
 ## 版本说明
 
-当前版本：[v0.2.0-alpha](VERSION)
+当前版本：[v0.2.1-alpha](VERSION)
 
 - [版本管理规范](VERSIONING.md)
 - [更新日志](CHANGELOG.md)
