@@ -3,6 +3,7 @@ module github.com/aberstone/tls_mitm_server
 go 1.23
 
 require (
+	github.com/andybalholm/brotli v1.0.6
 	github.com/elazarl/goproxy v1.7.2
 	github.com/refraction-networking/utls v1.6.7
 	github.com/rs/zerolog v1.34.0
@@ -11,7 +12,6 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect

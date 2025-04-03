@@ -4,6 +4,11 @@
 
 此项目遵循[语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [0.2.1-alpha.hotfix1] - 2025-04-03
+
+### 新增
+- 针对 `body` 部分使用了`br,gzip,deflate` 压缩手段的 `resp` 进行了解压处理
+
 ## [0.2.1-alpha] - 2025-04-01
 
 ### 文档
