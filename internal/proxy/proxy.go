@@ -18,13 +18,19 @@
 package proxy
 
 import (
+	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/andybalholm/brotli"
 	"github.com/elazarl/goproxy"
 
 	"github.com/aberstone/tls_mitm_server/internal/errors"
@@ -133,6 +139,60 @@ func (p *Proxy) initHTTPProxy() error {
 		if err != nil {
 			p.opts.Logger.Error("请求处理失败", err)
 			return req, goproxy.NewResponse(req, goproxy.ContentTypeText, http.StatusInternalServerError, "Internal Server Error")
+		}
+
+		// 处理响应的Content-Encoding
+		if resp != nil && resp.Body != nil {
+			encoding := resp.Header.Get("Content-Encoding")
+			if encoding != "" {
+				var reader io.ReadCloser
+				var err error
+
+				// 读取原始响应体
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					p.opts.Logger.Error("读取响应体失败", err)
+					return req, resp
+				}
+				resp.Body.Close()
+
+				// 根据不同的编码类型进行解码
+				switch strings.ToLower(encoding) {
+				case "gzip":
+					reader, err = gzip.NewReader(bytes.NewReader(body))
+				case "deflate":
+					reader = flate.NewReader(bytes.NewReader(body))
+				case "br":
+					reader = io.NopCloser(brotli.NewReader(bytes.NewReader(body)))
+				default:
+					// 不支持的编码类型，保持原样返回
+					resp.Body = io.NopCloser(bytes.NewReader(body))
+					return req, resp
+				}
+
+				if err != nil {
+					p.opts.Logger.Error("创建解码器失败", err)
+					resp.Body = io.NopCloser(bytes.NewReader(body))
+					return req, resp
+				}
+
+				// 读取解码后的内容
+				decodedBody, err := io.ReadAll(reader)
+				reader.Close()
+				if err != nil {
+					p.opts.Logger.Error("解码响应体失败", err)
+					resp.Body = io.NopCloser(bytes.NewReader(body))
+					return req, resp
+				}
+
+				// 移除Content-Encoding头,因为内容已经被解码
+				resp.Header.Del("Content-Encoding")
+				// 更新Content-Length
+				resp.ContentLength = int64(len(decodedBody))
+				resp.Header.Set("Content-Length", fmt.Sprint(len(decodedBody)))
+				// 设置解码后的响应体
+				resp.Body = io.NopCloser(bytes.NewReader(decodedBody))
+			}
 		}
 
 		return req, resp
