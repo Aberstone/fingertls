@@ -20,8 +20,8 @@ package proxy
 import (
 	"net/url"
 
-	"github.com/aberstone/tls_mitm_server/internal/interfaces"
-	"github.com/aberstone/tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/logging"
+	"github.com/aberstone/tls_mitm_server/transport/tls"
 )
 
 // Options 代理服务器选项
@@ -29,7 +29,7 @@ type Options struct {
 	// 基本配置
 	Port          int
 	UpstreamProxy *url.URL
-	TLSDialer     interfaces.TLSDialer
+	TLSDialer     tls.ITLSDialer
 
 	// CA证书配置
 	CACert     []byte
@@ -37,7 +37,7 @@ type Options struct {
 	CertConfig *CertConfig
 
 	// 功能组件
-	Logger *logging.Logger
+	Logger logging.ILogger
 
 	// 功能开关
 	Verbose bool
@@ -69,7 +69,7 @@ func WithUpstreamProxy(upstreamURL *url.URL) Option {
 }
 
 // WithTLSDialer 设置TLS连接器
-func WithTLSDialer(dialer interfaces.TLSDialer) Option {
+func WithTLSDialer(dialer tls.ITLSDialer) Option {
 	return func(opts *Options) {
 		opts.TLSDialer = dialer
 	}
@@ -91,7 +91,7 @@ func WithCertConfig(config *CertConfig) Option {
 }
 
 // WithLogger 设置日志记录器
-func WithLogger(logger *logging.Logger) Option {
+func WithLogger(logger logging.ILogger) Option {
 	return func(opts *Options) {
 		opts.Logger = logger
 	}

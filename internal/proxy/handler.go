@@ -24,8 +24,9 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/aberstone/tls_mitm_server/internal/interfaces"
-	"github.com/aberstone/tls_mitm_server/internal/logging"
+	// "github.com/aberstone/tls_mitm_server/internal/interfaces"
+	"github.com/aberstone/tls_mitm_server/logging"
+	tr_tls "github.com/aberstone/tls_mitm_server/transport/tls"
 
 	utls "github.com/refraction-networking/utls"
 	"golang.org/x/net/http2"
@@ -40,11 +41,11 @@ type RequestHandler interface {
 // HTTPHandler 处理HTTP请求
 type HTTPHandler struct {
 	transport *http.Transport
-	logger    *logging.Logger
+	logger    logging.ILogger
 }
 
 // NewHTTPHandler 创建HTTP请求处理器
-func NewHTTPHandler(upstreamProxy *http.Transport, logger *logging.Logger) RequestHandler {
+func NewHTTPHandler(upstreamProxy *http.Transport, logger logging.ILogger) RequestHandler {
 	return &HTTPHandler{
 		transport: upstreamProxy,
 		logger:    logger,
@@ -81,12 +82,12 @@ func (h *HTTPHandler) HandleRequest(req *http.Request) (*http.Response, error) {
 
 // HTTPSHandler 处理HTTPS请求
 type HTTPSHandler struct {
-	tlsDialer interfaces.TLSDialer
-	logger    *logging.Logger
+	tlsDialer tr_tls.ITLSDialer
+	logger    logging.ILogger
 }
 
 // NewHTTPSHandler 创建HTTPS请求处理器
-func NewHTTPSHandler(tlsDialer interfaces.TLSDialer, logger *logging.Logger) RequestHandler {
+func NewHTTPSHandler(tlsDialer tr_tls.ITLSDialer, logger logging.ILogger) RequestHandler {
 	return &HTTPSHandler{
 		tlsDialer: tlsDialer,
 		logger:    logger,

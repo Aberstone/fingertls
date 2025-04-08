@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package transport
+package proxy_connector
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/aberstone/tls_mitm_server/internal/errors"
-	"github.com/aberstone/tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/logging"
 )
 
 const (
@@ -51,20 +51,20 @@ const (
 	respError     = 0x01
 )
 
-// SOCKS5ProxyConnector 实现SOCKS5代理连接
-type SOCKS5ProxyConnector struct {
+// Socks5ProxyConnector 实现SOCKS5代理连接
+type Socks5ProxyConnector struct {
 	timeout time.Duration
-	logger  *logging.Logger
+	logger  logging.ILogger
 }
 
-func newSOCKS5ProxyConnector(timeout time.Duration, logger *logging.Logger) *SOCKS5ProxyConnector {
-	return &SOCKS5ProxyConnector{
+func NewSocks5ProxyConnector(timeout time.Duration, logger logging.ILogger) ProxyConnector {
+	return &Socks5ProxyConnector{
 		timeout: timeout,
 		logger:  logger,
 	}
 }
 
-func (c *SOCKS5ProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error) {
+func (c *Socks5ProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error) {
 	c.logger.Info(fmt.Sprintf("[SOCKS5] 连接到代理服务器 %s", proxyURL.Host))
 
 	// 连接到代理服务器
@@ -91,7 +91,7 @@ func (c *SOCKS5ProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, t
 	return conn, nil
 }
 
-func (c *SOCKS5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error {
+func (c *Socks5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error {
 	c.logger.Info("[SOCKS5] 开始握手...")
 
 	// 发送版本和支持的认证方法
@@ -141,7 +141,7 @@ func (c *SOCKS5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error
 	return nil
 }
 
-func (c *SOCKS5ProxyConnector) authenticate(conn net.Conn, proxyURL *url.URL) error {
+func (c *Socks5ProxyConnector) authenticate(conn net.Conn, proxyURL *url.URL) error {
 	if proxyURL.User == nil {
 		return errors.NewError(errors.ErrProxy, "需要认证信息但未提供", nil)
 	}
@@ -177,7 +177,7 @@ func (c *SOCKS5ProxyConnector) authenticate(conn net.Conn, proxyURL *url.URL) er
 	return nil
 }
 
-func (c *SOCKS5ProxyConnector) connectTarget(conn net.Conn, targetAddr string) error {
+func (c *Socks5ProxyConnector) connectTarget(conn net.Conn, targetAddr string) error {
 	c.logger.Info(fmt.Sprintf("[SOCKS5] 请求连接到 %s", targetAddr))
 
 	host, port, err := net.SplitHostPort(targetAddr)

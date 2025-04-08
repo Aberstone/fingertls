@@ -31,9 +31,9 @@ import (
 
 	"github.com/aberstone/tls_mitm_server/internal/config"
 	"github.com/aberstone/tls_mitm_server/internal/fingerprint"
-	"github.com/aberstone/tls_mitm_server/internal/logging"
 	"github.com/aberstone/tls_mitm_server/internal/proxy"
-	"github.com/aberstone/tls_mitm_server/internal/transport"
+	"github.com/aberstone/tls_mitm_server/logging"
+	"github.com/aberstone/tls_mitm_server/transport/tls"
 
 	utls "github.com/refraction-networking/utls"
 )
@@ -72,7 +72,12 @@ func main() {
 	}
 
 	// 初始化日志
-	logger, err := logging.NewLogger(&cfg.Log)
+	logger, err := logging.NewZapLogger(&logging.ZapLoggerConfig{
+		Level:   cfg.Log.Level,
+		Format:  cfg.Log.Format,
+		Output:  cfg.Log.Output,
+		Verbose: cfg.Log.Verbose,
+	})
 	if err != nil {
 		log.Fatalf("初始化日志失败: %v", err)
 	}
@@ -114,15 +119,13 @@ func main() {
 		logger.Info("使用默认TLS指纹")
 	}
 
-	// 创建TLS拨号器配置
-	dialerConfig := transport.DialerConfig{
-		GetHelloSpec:  getClientHelloSpec,
-		Timeout:       30 * time.Second,
-		UpstreamProxy: upstreamURL,
-	}
-
-	// 创建TLS拨号器
-	dialer := transport.NewTLSDialer(dialerConfig, logger)
+	dialer := tls.NewTLSDialer(
+		tls.WithLogger(logger),
+		tls.WithTimeout(30*time.Second),
+		tls.WithProxyTimeout(30*time.Second),
+		tls.WithSpecFactory(getClientHelloSpec),
+		tls.WithUpstreamProxy(upstreamURL),
+	)
 
 	// 创建代理服务器选项
 	proxyOpts := []proxy.Option{

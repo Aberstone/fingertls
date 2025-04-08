@@ -15,27 +15,29 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package transport
+package tls
 
 import (
 	"context"
 	"fmt"
 	"net"
+
+	"github.com/aberstone/tls_mitm_server/transport/proxy_connector"
 )
 
-// DirectTLSDialer 实现直接TLS连接
-type DirectTLSDialer struct {
+type ProxyTLSDialer struct {
 	*BaseTLSDialer
+	connector proxy_connector.ProxyConnector
 }
 
-func (d *DirectTLSDialer) DialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
-	d.logger.Info(fmt.Sprintf("[TLS] 直接连接到 %s", addr))
+func (d *ProxyTLSDialer) DialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
+	d.opts.logger.Info(fmt.Sprintf("[TLS] 通过代理连接到 %s", addr))
 
-	tcpConn, err := (&net.Dialer{Timeout: d.config.Timeout}).DialContext(ctx, network, addr)
+	proxyConn, err := d.connector.Connect(ctx, d.opts.upstreamProxy, addr)
 	if err != nil {
-		d.logger.Error(fmt.Sprintf("TCP连接到 %s 失败", addr), err)
+		d.opts.logger.Error(fmt.Sprintf("代理连接到 %s 失败", addr), err)
 		return nil, err
 	}
 
-	return d.handshakeTLS(ctx, tcpConn, d.extractServerName(addr))
+	return d.handshakeTLS(ctx, proxyConn, extractServerName(addr))
 }

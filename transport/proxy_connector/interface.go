@@ -15,38 +15,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package proxy
+package proxy_connector
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/aberstone/tls_mitm_server/logging"
+	"context"
+	"net"
+	"net/url"
 )
 
-// Logger 封装代理服务器的日志功能
-type Logger interface {
-	Printf(format string, v ...interface{})
-}
+type ProxyScheme string
 
-// goproxyLoggerAdapter 实现goproxy.Logger接口的适配器
-type goproxyLoggerAdapter struct {
-	logger logging.ILogger
-}
+const (
+	ProxySchemeHTTP   ProxyScheme = "http"
+	ProxySchemeSocks5 ProxyScheme = "socks5"
+)
 
-// newGoproxyLogger 创建新的goproxy日志适配器
-func newGoproxyLogger(logger logging.ILogger) Logger {
-	return &goproxyLoggerAdapter{
-		logger: logger,
-	}
-}
-
-// Printf 实现goproxy.Logger接口
-// 将goproxy的日志转换为我们的日志格式
-func (l *goproxyLoggerAdapter) Printf(format string, v ...interface{}) {
-	// 移除末尾的换行符
-	msg := fmt.Sprintf(format, v...)
-	msg = strings.TrimRight(msg, "\n")
-	msg = "[goproxy] " + msg
-	l.logger.Info(msg)
+type ProxyConnector interface {
+	// Connect 建立到目标地址的代理连接
+	Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error)
 }

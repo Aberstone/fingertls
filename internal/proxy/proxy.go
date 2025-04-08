@@ -198,6 +198,11 @@ func (p *Proxy) initHTTPProxy() error {
 		return req, resp
 	})
 
+	p.httpProxy.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		p.opts.Logger.Info(fmt.Sprintf("[MITM_SERVER] 响应: %d %s", resp.StatusCode, resp.Request.URL.String()))
+		return resp
+	})
+
 	return nil
 }
 
