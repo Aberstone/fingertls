@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aberstone/tls_mitm_server/logging"
-	"github.com/aberstone/tls_mitm_server/transport/proxy_connector"
-	"github.com/aberstone/tls_mitm_server/transport/tls/fingerprint"
+	"github.com/aberstone/fingertls/logging"
+	"github.com/aberstone/fingertls/transport/proxy_connector"
+	"github.com/aberstone/fingertls/transport/tls/fingerprint"
 )
 
 type Options struct {

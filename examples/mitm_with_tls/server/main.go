@@ -30,8 +30,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/aberstone/tls_mitm_server/transport/tls"
-	"github.com/aberstone/tls_mitm_server/transport/tls/fingerprint"
+	"github.com/aberstone/fingertls/transport/tls"
+	"github.com/aberstone/fingertls/transport/tls/fingerprint"
 	"github.com/andybalholm/brotli"
 	"github.com/elazarl/goproxy"
 	utls "github.com/refraction-networking/utls"

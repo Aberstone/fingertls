@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aberstone/tls_mitm_server/logging"
+	"github.com/aberstone/fingertls/logging"
 )
 
 // HttpProxyConnector 实现HTTP代理连接

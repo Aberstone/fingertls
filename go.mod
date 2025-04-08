@@ -1,4 +1,4 @@
-module github.com/aberstone/tls_mitm_server
+module github.com/aberstone/fingertls
 
 go 1.23
 

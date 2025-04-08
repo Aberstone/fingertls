@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aberstone/tls_mitm_server/logging"
+	"github.com/aberstone/fingertls/logging"
 )
 
 const (
