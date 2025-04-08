@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/aberstone/tls_mitm_server/transport/proxy_connector"
+	"github.com/aberstone/fingertls/transport/proxy_connector"
 )
 
 type ProxyTLSDialer struct {

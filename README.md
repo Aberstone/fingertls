@@ -1,14 +1,14 @@
-# TLS MITM Server
+# TLS MITM Module
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.1--alpha.hotfix1-orange.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.0--alpha-orange.svg)](VERSION)
 
-一个基于Go实现的MITM代理服务器，支持自定义TLS指纹和多级代理链。
+一个基于Go实现的TLS指纹模拟模块库，支持MITM代理和多级代理链。
 
 ## 版本说明
 
-当前版本：[v0.2.1-alpha.hotfix1](VERSION)
+当前版本：[v0.3.0-alpha](VERSION)
 
 - [版本管理规范](VERSIONING.md)
 - [更新日志](CHANGELOG.md)
@@ -17,19 +17,15 @@
 
 ## 功能特性
 
-- ✨ 中间人代理服务器，支持拦截和处理HTTP及HTTPS流量
-- 🔑 基于自签名CA证书的TLS会话拦截
-- 🎭 可自定义TLS Client Hello指纹，支持多种预设配置
-- ⛓️ 灵活的代理链配置，支持HTTP和SOCKS5上游代理
-- 📝 结构化日志记录，支持多种输出格式
-- 🚀 异步处理设计，高效的请求处理
-- 🔧 完善的配置选项和命令行参数支持
+- 🎭 可定制的TLS Client Hello指纹
+- ⛓️ HTTP/SOCKS5多级代理链支持
+- 🔄 HTTP1.1/HTTP2 协议自动协商
+- 📝 可扩展的日志接口
 
 ## 技术栈
 
 - Go 1.23+
 - [utls](https://github.com/refraction-networking/utls) - TLS指纹定制
-- [goproxy](https://github.com/elazarl/goproxy) - 代理服务器基础功能
 - [zerolog](https://github.com/rs/zerolog) - 高性能日志库
 
 ## 快速开始
@@ -37,137 +33,74 @@
 ### 安装
 
 ```bash
-# 克隆仓库
-git clone https://github.com/aberstone/tls_mitm_server.git
-
-# 进入项目目录
-cd tls_mitm_server
-
-# 编译
-make
+go get github.com/aberstone/fingertls
 ```
 
-### 生成CA证书
+### 基本用法
 
-首次使用需要生成CA证书：
+```go
+import (
+    "github.com/aberstone/fingertls/transport/tls"
+    "github.com/aberstone/fingertls/transport/tls/fingerprint"
+)
 
-```bash
-./build/gen-ca
+// 创建TLS拨号器
+dialer := tls.NewTLSDialer(
+    tls.WithSpecFactory(fingerprint.GetDefaultClientHelloSpec), // 设置TLS指纹
+    tls.WithUpstreamProxy(upstreamProxy),                      // 可选：设置上游代理
+    tls.WithProxyTimeout(30),                                  // 可选：设置超时时间
+)
+
+// 建立TLS连接
+conn, err := dialer.DialTLS(context.TODO(), "tcp", "example.com:443")
 ```
 
-此命令会在当前目录生成：
-- ca.crt - CA证书
-- ca.key - CA私钥
+更多使用示例请参考[examples](examples/)目录。
 
-### 启动代理服务器
-
-```bash
-./build/mitm --port 8080 --ca-cert ca.crt --ca-key ca.key
-```
-
-### 配置选项
-
-```bash
-Usage of ./build/mitm:
-  --port int            代理服务器监听端口 (默认 8080)
-  --ca-cert string      CA证书路径 (默认 "ca.crt")
-  --ca-key string       CA私钥路径 (默认 "ca.key")
-  --fingerprint string  TLS指纹类型 (default, chrome, firefox等)
-  --upstream string     上游代理URL (可选，支持HTTP和SOCKS5)
-  --log-level string   日志级别 (debug, info, warn, error)
-  --log-format string  日志格式 (text, json)
-  --verbose            显示详细日志
-```
-
-## 架构设计
+## 模块架构
 
 ### 核心组件
 
 ```mermaid
 graph TD
-    A[入站请求] --> B{代理服务器}
-    B --> C[请求分类]
-    C --> D[HTTP请求]
-    C --> E[HTTPS请求]
-    E --> F[TLS拦截]
-
-    subgraph TLS Transport
-    F --> G[TLS指纹模拟]
-    G --> H[TLS拨号器]
-    H --> I{ProxyConnector}
-    I --> J[直连]
-    I --> K[上游代理]
-    end
-
-    subgraph 上游代理实现
-    K --> L[HTTP代理]
-    K --> M[SOCKS5代理]
-    end
-
-    D --> K
+    A[应用程序] --> B[TLS拨号器]
+    B --> C[指纹定制]
+    B --> D[代理连接器]
+    
+    D --> E[直连]
+    D --> F[代理链]
+    
+    F --> G[HTTP代理]
+    F --> H[SOCKS5代理]
 ```
 
 ### 关键特性
 
-1. 模块化设计
-   - 请求处理器接口
-   - TLS指纹定制组件
-   - 代理连接器抽象
-   - 可扩展的上游代理支持
-   - 可扩展的日志系统
+1. TLS指纹模拟
+   - 支持自定义Client Hello
+   - 协议版本自动协商
 
-2. 高性能实现
-   - 异步请求处理
-   - 高效的日志记录
-   - 合理的资源管理
+2. 代理链路由
+   - 灵活的代理链配置
+   - 多种代理协议支持
 
 ## 开发指南
 
 ### 环境要求
 
 - Go 1.23+
-- Make
-- Git
-
-### 本地开发
-
-1. 克隆仓库
-```bash
-git clone https://github.com/aberstone/tls_mitm_server.git
-```
-
-2. 安装依赖
-```bash
-go mod download
-```
-
-3. 运行测试
-```bash
-make test
-```
-
-4. 构建项目
-```bash
-make
-```
 
 ### 代码结构
 
 ```
 .
-├── cmd/                # 命令行工具
-│   ├── mitm/          # 代理服务器
-│   └── generate-ca/   # CA证书生成工具
-├── internal/          # 内部包
-│   ├── cert/         # 证书处理
-│   ├── config/       # 配置管理
-│   ├── errors/       # 错误处理
-│   ├── fingerprint/  # TLS指纹
-│   ├── interfaces/   # 接口定义
-│   ├── logging/      # 日志系统
-│   ├── proxy/        # 代理核心
-│   └── transport/    # 传输层
-└── build/            # 编译产物
+├── transport/         # 传输层模块
+│   ├── tls/          # TLS相关实现
+│   │   ├── fingerprint/  # 指纹模拟
+│   │   └── proxy/        # 代理支持
+│   └── proxy_connector/  # 代理连接器
+├── logging/          # 日志接口
+└── examples/         # 使用示例
 ```
 
 ## 贡献指南
@@ -213,7 +146,7 @@ make
 
 ## 支持与反馈
 
-- 提交 [Issue](https://github.com/aberstone/tls_mitm_server/issues)
+- 提交 [Issue](https://github.com/aberstone/fingertls/issues)
 - 发送邮件至 aberstone.hk@gmail.com
 
 ---

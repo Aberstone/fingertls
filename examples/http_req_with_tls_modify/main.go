@@ -26,8 +26,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aberstone/tls_mitm_server/transport/tls"
-	"github.com/aberstone/tls_mitm_server/transport/tls/fingerprint"
+	"github.com/aberstone/fingertls/transport/tls"
+	"github.com/aberstone/fingertls/transport/tls/fingerprint"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"golang.org/x/net/http2"
 )
