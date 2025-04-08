@@ -10,7 +10,7 @@
 
 ### 报告Bug
 
-1. 在提交bug之前，请先搜索[issues](https://github.com/aberstone/tls_mitm_server/issues)确认该bug尚未被报告
+1. 在提交bug之前，请先搜索[issues](https://github.com/aberstone/fingertls/issues)确认该bug尚未被报告
 2. 如果你找不到相关issue，请创建一个新的issue
 3. 请使用issue模板，并提供以下信息：
    - 问题的清晰描述
@@ -118,9 +118,9 @@ make
 
 ## 反馈渠道
 
-- [GitHub Issues](https://github.com/aberstone/tls_mitm_server/issues)
+- [GitHub Issues](https://github.com/aberstone/fingertls/issues)
 - 电子邮件：aberstone.hk@gmail.com
-- 讨论组：[Discussions](https://github.com/aberstone/tls_mitm_server/discussions)
+- 讨论组：[Discussions](https://github.com/aberstone/fingertls/discussions)
 
 ## 许可证
 

@@ -120,5 +120,5 @@ CHANGELOG.md文件格式遵循[Keep a Changelog](https://keepachangelog.com/zh-C
 
 如果你在版本管理过程中遇到任何问题，请通过以下方式反馈：
 
-- [创建Issue](https://github.com/aberstone/tls_mitm_server/issues)
+- [创建Issue](https://github.com/aberstone/fingertls/issues)
 - 发送邮件至：aberstone.hk@gmail.com

@@ -15,38 +15,29 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package proxy
+package tls
 
 import (
+	"context"
 	"fmt"
-	"strings"
+	"net"
 
-	"github.com/aberstone/tls_mitm_server/internal/logging"
+	"github.com/aberstone/fingertls/transport/proxy_connector"
 )
 
-// Logger 封装代理服务器的日志功能
-type Logger interface {
-	Printf(format string, v ...interface{})
+type ProxyTLSDialer struct {
+	*BaseTLSDialer
+	connector proxy_connector.ProxyConnector
 }
 
-// goproxyLoggerAdapter 实现goproxy.Logger接口的适配器
-type goproxyLoggerAdapter struct {
-	logger *logging.Logger
-}
+func (d *ProxyTLSDialer) DialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
+	d.opts.logger.Info(fmt.Sprintf("[TLS] 通过代理连接到 %s", addr))
 
-// newGoproxyLogger 创建新的goproxy日志适配器
-func newGoproxyLogger(logger *logging.Logger) Logger {
-	return &goproxyLoggerAdapter{
-		logger: logger,
+	proxyConn, err := d.connector.Connect(ctx, d.opts.upstreamProxy, addr)
+	if err != nil {
+		d.opts.logger.Error(fmt.Sprintf("代理连接到 %s 失败", addr), err)
+		return nil, err
 	}
-}
 
-// Printf 实现goproxy.Logger接口
-// 将goproxy的日志转换为我们的日志格式
-func (l *goproxyLoggerAdapter) Printf(format string, v ...interface{}) {
-	// 移除末尾的换行符
-	msg := fmt.Sprintf(format, v...)
-	msg = strings.TrimRight(msg, "\n")
-	msg = "[goproxy] " + msg
-	l.logger.Info(msg)
+	return d.handshakeTLS(ctx, proxyConn, extractServerName(addr))
 }
