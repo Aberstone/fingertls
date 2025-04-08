@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package transport
+package proxy_connector
 
 import (
 	"bufio"
@@ -27,23 +27,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aberstone/tls_mitm_server/internal/logging"
+	"github.com/aberstone/tls_mitm_server/logging"
 )
 
-// HTTPProxyConnector 实现HTTP代理连接
-type HTTPProxyConnector struct {
+// HttpProxyConnector 实现HTTP代理连接
+type HttpProxyConnector struct {
 	timeout time.Duration
-	logger  *logging.Logger
+	logger  logging.ILogger
 }
 
-func newHTTPProxyConnector(timeout time.Duration, logger *logging.Logger) *HTTPProxyConnector {
-	return &HTTPProxyConnector{
+func NewHTTPProxyConnector(timeout time.Duration, logger logging.ILogger) ProxyConnector {
+	return &HttpProxyConnector{
 		timeout: timeout,
 		logger:  logger,
 	}
 }
 
-func (c *HTTPProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error) {
+func (c *HttpProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error) {
 	c.logger.Info(fmt.Sprintf("[UPSTREAM] 连接到代理服务器 %s", proxyURL.Host))
 
 	// 连接到代理服务器
@@ -65,7 +65,7 @@ func (c *HTTPProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, tar
 	return conn, nil
 }
 
-func (c *HTTPProxyConnector) sendConnectRequest(conn net.Conn, targetAddr string, proxyURL *url.URL) error {
+func (c *HttpProxyConnector) sendConnectRequest(conn net.Conn, targetAddr string, proxyURL *url.URL) error {
 	// 准备认证信息
 	var auth string
 	if proxyURL.User != nil {

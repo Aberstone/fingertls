@@ -15,27 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package transport
+package logging
 
-import (
-	"context"
-	"fmt"
-	"net"
-)
-
-// DirectTLSDialer 实现直接TLS连接
-type DirectTLSDialer struct {
-	*BaseTLSDialer
-}
-
-func (d *DirectTLSDialer) DialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
-	d.logger.Info(fmt.Sprintf("[TLS] 直接连接到 %s", addr))
-
-	tcpConn, err := (&net.Dialer{Timeout: d.config.Timeout}).DialContext(ctx, network, addr)
-	if err != nil {
-		d.logger.Error(fmt.Sprintf("TCP连接到 %s 失败", addr), err)
-		return nil, err
-	}
-
-	return d.handshakeTLS(ctx, tcpConn, d.extractServerName(addr))
+type ILogger interface {
+	Debug(msg string)
+	Info(msg string)
+	Warn(msg string)
+	Error(msg string, err error)
 }

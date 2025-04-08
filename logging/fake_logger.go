@@ -15,37 +15,18 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package transport
+package logging
 
-import (
-	"context"
-	"net"
-	"net/url"
-	"time"
+type FakeLogger struct{}
 
-	utls "github.com/refraction-networking/utls"
-)
-
-// ProxyScheme 定义支持的代理协议类型
-type ProxyScheme string
-
-const (
-	ProxySchemeHTTP   ProxyScheme = "http"
-	ProxySchemeSocks5 ProxyScheme = "socks5"
-)
-
-// DialerConfig TLS拨号器配置
-type DialerConfig struct {
-	// TLS配置
-	GetHelloSpec func() *utls.ClientHelloSpec
-	Timeout      time.Duration
-
-	// 可选的上游代理配置
-	UpstreamProxy *url.URL
+func NewFakeLogger() *FakeLogger {
+	return &FakeLogger{}
 }
-
-// ProxyConnector 代理连接器接口
-type ProxyConnector interface {
-	// Connect 建立到目标地址的代理连接
-	Connect(ctx context.Context, proxyURL *url.URL, targetAddr string) (net.Conn, error)
+func (f *FakeLogger) Debug(msg string) {
+	// Fake implementation, do nothing
+}
+func (f *FakeLogger) Info(msg string) {}
+func (f *FakeLogger) Warn(msg string) {}
+func (f *FakeLogger) Error(msg string, err error) {
+	// Fake implementation, do nothing
 }

@@ -26,17 +26,32 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-
-	"github.com/aberstone/tls_mitm_server/internal/config"
 )
 
 // Logger 封装日志记录器
-type Logger struct {
+type ZeroLogger struct {
 	logger zerolog.Logger
 }
 
-// NewLogger 创建新的日志记录器
-func NewLogger(cfg *config.LogConfig) (*Logger, error) {
+type ZeroLoggerConfig struct {
+	Level   string `mapstructure:"level" json:"level"`
+	Format  string `mapstructure:"format" json:"format"`
+	Output  string `mapstructure:"output" json:"output"`
+	Verbose bool   `mapstructure:"verbose" json:"verbose"`
+}
+
+// NewZeroLogger 创建新的日志记录器
+func NewZeroLogger(cfg *ZeroLoggerConfig) (*ZeroLogger, error) {
+
+	if cfg == nil {
+		cfg = &ZeroLoggerConfig{
+			Level:   "info",
+			Output:  "stdout",
+			Format:  "text",
+			Verbose: false,
+		}
+	}
+
 	// 配置输出
 	var output io.Writer
 	switch cfg.Output {
@@ -80,57 +95,57 @@ func NewLogger(cfg *config.LogConfig) (*Logger, error) {
 		Timestamp().
 		Logger()
 
-	return &Logger{logger: logger}, nil
+	return &ZeroLogger{logger: logger}, nil
 }
 
 // WithContext 创建带有上下文值的新记录器
-func (l *Logger) WithContext(ctx context.Context) *Logger {
-	return &Logger{
+func (l *ZeroLogger) WithContext(ctx context.Context) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Logger(),
 	}
 }
 
 // WithField 添加字段
-func (l *Logger) WithField(key string, value interface{}) *Logger {
-	return &Logger{
+func (l *ZeroLogger) WithField(key string, value interface{}) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Interface(key, value).Logger(),
 	}
 }
 
 // Debug 记录调试级别日志
-func (l *Logger) Debug(msg string) {
+func (l *ZeroLogger) Debug(msg string) {
 	l.logger.Debug().Msg(msg)
 }
 
 // Info 记录信息级别日志
-func (l *Logger) Info(msg string) {
+func (l *ZeroLogger) Info(msg string) {
 	l.logger.Info().Msg(msg)
 }
 
 // Warn 记录警告级别日志
-func (l *Logger) Warn(msg string) {
+func (l *ZeroLogger) Warn(msg string) {
 	l.logger.Warn().Msg(msg)
 }
 
 // Error 记录错误级别日志
-func (l *Logger) Error(msg string, err error) {
+func (l *ZeroLogger) Error(msg string, err error) {
 	l.logger.Error().Err(err).Msg(msg)
 }
 
 // WithError 记录带有错误的日志
-func (l *Logger) WithError(err error) *Logger {
-	return &Logger{
+func (l *ZeroLogger) WithError(err error) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Err(err).Logger(),
 	}
 }
 
 // WithFields 添加多个字段
-func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+func (l *ZeroLogger) WithFields(fields map[string]interface{}) *ZeroLogger {
 	logCtx := l.logger.With()
 	for k, v := range fields {
 		logCtx = logCtx.Interface(k, v)
 	}
-	return &Logger{
+	return &ZeroLogger{
 		logger: logCtx.Logger(),
 	}
 }
@@ -150,7 +165,7 @@ type AccessLog struct {
 }
 
 // LogAccess 记录访问日志
-func (l *Logger) LogAccess(log AccessLog) {
+func (l *ZeroLogger) LogAccess(log AccessLog) {
 	event := l.logger.Info().
 		Str("type", "access").
 		Str("protocol", log.Protocol).
@@ -174,11 +189,11 @@ func (l *Logger) LogAccess(log AccessLog) {
 }
 
 // Global 全局日志实例
-var Global *Logger
+var Global *ZeroLogger
 
 // InitGlobal 初始化全局日志实例
-func InitGlobal(cfg *config.LogConfig) error {
-	logger, err := NewLogger(cfg)
+func InitGlobal(cfg *ZeroLoggerConfig) error {
+	logger, err := NewZeroLogger(cfg)
 	if err != nil {
 		return err
 	}
