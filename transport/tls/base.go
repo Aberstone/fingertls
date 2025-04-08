@@ -25,8 +25,6 @@ import (
 	utls "github.com/refraction-networking/utls"
 )
 
-type SpecFactory func() *utls.ClientHelloSpec
-
 type BaseTLSDialer struct {
 	opts *Options
 }

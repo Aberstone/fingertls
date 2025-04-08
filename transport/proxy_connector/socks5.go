@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aberstone/tls_mitm_server/internal/errors"
 	"github.com/aberstone/tls_mitm_server/logging"
 )
 
@@ -72,7 +71,7 @@ func (c *Socks5ProxyConnector) Connect(ctx context.Context, proxyURL *url.URL, t
 	conn, err := dialer.DialContext(ctx, "tcp", proxyURL.Host)
 	if err != nil {
 		c.logger.Error(fmt.Sprintf("连接SOCKS5代理服务器 %s 失败", proxyURL.Host), err)
-		return nil, errors.NewError(errors.ErrProxy, "连接SOCKS5代理服务器失败", err)
+		return nil, fmt.Errorf("连接SOCKS5代理服务器 %s 失败: %v", proxyURL.Host, err)
 	}
 
 	// 进行握手
@@ -109,18 +108,18 @@ func (c *Socks5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error
 
 	if _, err := conn.Write(request); err != nil {
 		c.logger.Error("发送SOCKS5握手请求失败", err)
-		return errors.NewError(errors.ErrProxy, "发送SOCKS5握手请求失败", err)
+		return fmt.Errorf("发送SOCKS5握手请求失败: %v", err)
 	}
 
 	// 读取服务器响应
 	response := make([]byte, 2)
 	if _, err := io.ReadFull(conn, response); err != nil {
 		c.logger.Error("读取SOCKS5握手响应失败", err)
-		return errors.NewError(errors.ErrProxy, "读取SOCKS5握手响应失败", err)
+		return fmt.Errorf("读取SOCKS5握手响应失败: %v", err)
 	}
 
 	if response[0] != socks5Version {
-		return errors.NewError(errors.ErrProxy, fmt.Sprintf("不支持的SOCKS版本: %d", response[0]), nil)
+		return fmt.Errorf("无效的SOCKS5版本: %d", response[0])
 	}
 
 	// 处理认证
@@ -133,9 +132,9 @@ func (c *Socks5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error
 			return err
 		}
 	case authNoAcceptable:
-		return errors.NewError(errors.ErrProxy, "没有可接受的认证方法", nil)
+		return fmt.Errorf("SOCKS5代理服务器不支持任何认证方法")
 	default:
-		return errors.NewError(errors.ErrProxy, fmt.Sprintf("不支持的认证方法: %d", response[1]), nil)
+		return fmt.Errorf("未知的认证方法: %d", response[1])
 	}
 
 	return nil
@@ -143,7 +142,7 @@ func (c *Socks5ProxyConnector) handshake(conn net.Conn, proxyURL *url.URL) error
 
 func (c *Socks5ProxyConnector) authenticate(conn net.Conn, proxyURL *url.URL) error {
 	if proxyURL.User == nil {
-		return errors.NewError(errors.ErrProxy, "需要认证信息但未提供", nil)
+		return fmt.Errorf("SOCKS5代理需要用户名和密码")
 	}
 
 	username := proxyURL.User.Username()
@@ -159,18 +158,18 @@ func (c *Socks5ProxyConnector) authenticate(conn net.Conn, proxyURL *url.URL) er
 
 	if _, err := conn.Write(request); err != nil {
 		c.logger.Error("发送认证请求失败", err)
-		return errors.NewError(errors.ErrProxy, "发送认证请求失败", err)
+		return fmt.Errorf("发送认证请求失败: %v", err)
 	}
 
 	// 读取认证响应
 	response := make([]byte, 2)
 	if _, err := io.ReadFull(conn, response); err != nil {
 		c.logger.Error("读取认证响应失败", err)
-		return errors.NewError(errors.ErrProxy, "读取认证响应失败", err)
+		return fmt.Errorf("读取认证响应失败: %v", err)
 	}
 
 	if response[1] != 0x00 {
-		return errors.NewError(errors.ErrProxy, "认证失败", nil)
+		return fmt.Errorf("SOCKS5认证失败，状态码: %d", response[1])
 	}
 
 	c.logger.Info("[SOCKS5] 认证成功")
@@ -182,13 +181,13 @@ func (c *Socks5ProxyConnector) connectTarget(conn net.Conn, targetAddr string) e
 
 	host, port, err := net.SplitHostPort(targetAddr)
 	if err != nil {
-		return errors.NewError(errors.ErrProxy, "无效的目标地址", err)
+		return fmt.Errorf("无效的目标地址: %s", targetAddr)
 	}
 
 	// 解析端口
 	portNum, err := net.LookupPort("tcp", port)
 	if err != nil {
-		return errors.NewError(errors.ErrProxy, "无效的端口号", err)
+		return fmt.Errorf("无法解析端口: %s", port)
 	}
 
 	// 准备请求
@@ -221,37 +220,37 @@ func (c *Socks5ProxyConnector) connectTarget(conn net.Conn, targetAddr string) e
 	// 发送请求
 	if _, err := conn.Write(request); err != nil {
 		c.logger.Error("发送连接请求失败", err)
-		return errors.NewError(errors.ErrProxy, "发送连接请求失败", err)
+		return fmt.Errorf("发送连接请求失败: %v", err)
 	}
 
 	// 读取响应
 	response := make([]byte, 4)
 	if _, err := io.ReadFull(conn, response); err != nil {
 		c.logger.Error("读取连接响应失败", err)
-		return errors.NewError(errors.ErrProxy, "读取连接响应失败", err)
+		return fmt.Errorf("读取连接响应失败: %v", err)
 	}
 
 	if response[1] != respSucceeded {
-		return errors.NewError(errors.ErrProxy, fmt.Sprintf("连接请求失败，状态码: %d", response[1]), nil)
+		return fmt.Errorf("SOCKS5连接失败，状态码: %d", response[1])
 	}
 
 	// 跳过响应中的地址信息
 	switch response[3] {
 	case addrTypeIPv4:
 		if _, err := io.CopyN(io.Discard, conn, 4+2); err != nil {
-			return errors.NewError(errors.ErrProxy, "读取响应地址失败", err)
+			return fmt.Errorf("读取响应地址失败: %v", err)
 		}
 	case addrTypeIPv6:
 		if _, err := io.CopyN(io.Discard, conn, 16+2); err != nil {
-			return errors.NewError(errors.ErrProxy, "读取响应地址失败", err)
+			return fmt.Errorf("读取响应地址失败: %v", err)
 		}
 	case addrTypeDomain:
 		domainLen := make([]byte, 1)
 		if _, err := io.ReadFull(conn, domainLen); err != nil {
-			return errors.NewError(errors.ErrProxy, "读取域名长度失败", err)
+			return fmt.Errorf("读取响应域名长度失败: %v", err)
 		}
 		if _, err := io.CopyN(io.Discard, conn, int64(domainLen[0])+2); err != nil {
-			return errors.NewError(errors.ErrProxy, "读取响应域名失败", err)
+			return fmt.Errorf("读取响应域名失败: %v", err)
 		}
 	}
 

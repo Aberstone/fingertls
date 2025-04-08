@@ -17,7 +17,11 @@
  */
 package fingerprint
 
-import utls "github.com/refraction-networking/utls"
+import (
+	utls "github.com/refraction-networking/utls"
+)
+
+type SpecFactory func() *utls.ClientHelloSpec
 
 func GetDefaultClientHelloSpec() *utls.ClientHelloSpec {
 	//修改ja4、ja3

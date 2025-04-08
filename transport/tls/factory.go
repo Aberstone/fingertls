@@ -23,11 +23,12 @@ import (
 
 	"github.com/aberstone/tls_mitm_server/logging"
 	"github.com/aberstone/tls_mitm_server/transport/proxy_connector"
+	"github.com/aberstone/tls_mitm_server/transport/tls/fingerprint"
 )
 
 type Options struct {
 	logger        logging.ILogger
-	sf            SpecFactory
+	sf            fingerprint.SpecFactory
 	timeout       time.Duration
 	upstreamProxy *url.URL
 	proxyTimeout  time.Duration
@@ -35,14 +36,22 @@ type Options struct {
 
 type Option func(*Options)
 
-func NewTLSDialer(opts ...Option) ITLSDialer {
-	options := &Options{
+func defaultOptions() *Options {
+
+	logger, _ := logging.NewZeroLogger(nil)
+
+	return &Options{
 		timeout:       30 * time.Second,
 		upstreamProxy: nil,
-		sf:            nil,
-		logger:        &logging.FakeLogger{},
+		sf:            fingerprint.GetDefaultClientHelloSpec,
+		logger:        logger,
 		proxyTimeout:  30 * time.Second,
 	}
+}
+
+func NewTLSDialer(opts ...Option) ITLSDialer {
+
+	options := defaultOptions()
 
 	for _, opt := range opts {
 		opt(options)
@@ -88,7 +97,7 @@ func WithUpstreamProxy(upstreamProxy *url.URL) Option {
 		opts.upstreamProxy = upstreamProxy
 	}
 }
-func WithSpecFactory(sf SpecFactory) Option {
+func WithSpecFactory(sf fingerprint.SpecFactory) Option {
 	return func(opts *Options) {
 		opts.sf = sf
 	}

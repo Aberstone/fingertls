@@ -29,22 +29,22 @@ import (
 )
 
 // Logger 封装日志记录器
-type ZapLogger struct {
+type ZeroLogger struct {
 	logger zerolog.Logger
 }
 
-type ZapLoggerConfig struct {
+type ZeroLoggerConfig struct {
 	Level   string `mapstructure:"level" json:"level"`
 	Format  string `mapstructure:"format" json:"format"`
 	Output  string `mapstructure:"output" json:"output"`
 	Verbose bool   `mapstructure:"verbose" json:"verbose"`
 }
 
-// NewZapLogger 创建新的日志记录器
-func NewZapLogger(cfg *ZapLoggerConfig) (*ZapLogger, error) {
+// NewZeroLogger 创建新的日志记录器
+func NewZeroLogger(cfg *ZeroLoggerConfig) (*ZeroLogger, error) {
 
 	if cfg == nil {
-		cfg = &ZapLoggerConfig{
+		cfg = &ZeroLoggerConfig{
 			Level:   "info",
 			Output:  "stdout",
 			Format:  "text",
@@ -95,57 +95,57 @@ func NewZapLogger(cfg *ZapLoggerConfig) (*ZapLogger, error) {
 		Timestamp().
 		Logger()
 
-	return &ZapLogger{logger: logger}, nil
+	return &ZeroLogger{logger: logger}, nil
 }
 
 // WithContext 创建带有上下文值的新记录器
-func (l *ZapLogger) WithContext(ctx context.Context) *ZapLogger {
-	return &ZapLogger{
+func (l *ZeroLogger) WithContext(ctx context.Context) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Logger(),
 	}
 }
 
 // WithField 添加字段
-func (l *ZapLogger) WithField(key string, value interface{}) *ZapLogger {
-	return &ZapLogger{
+func (l *ZeroLogger) WithField(key string, value interface{}) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Interface(key, value).Logger(),
 	}
 }
 
 // Debug 记录调试级别日志
-func (l *ZapLogger) Debug(msg string) {
+func (l *ZeroLogger) Debug(msg string) {
 	l.logger.Debug().Msg(msg)
 }
 
 // Info 记录信息级别日志
-func (l *ZapLogger) Info(msg string) {
+func (l *ZeroLogger) Info(msg string) {
 	l.logger.Info().Msg(msg)
 }
 
 // Warn 记录警告级别日志
-func (l *ZapLogger) Warn(msg string) {
+func (l *ZeroLogger) Warn(msg string) {
 	l.logger.Warn().Msg(msg)
 }
 
 // Error 记录错误级别日志
-func (l *ZapLogger) Error(msg string, err error) {
+func (l *ZeroLogger) Error(msg string, err error) {
 	l.logger.Error().Err(err).Msg(msg)
 }
 
 // WithError 记录带有错误的日志
-func (l *ZapLogger) WithError(err error) *ZapLogger {
-	return &ZapLogger{
+func (l *ZeroLogger) WithError(err error) *ZeroLogger {
+	return &ZeroLogger{
 		logger: l.logger.With().Err(err).Logger(),
 	}
 }
 
 // WithFields 添加多个字段
-func (l *ZapLogger) WithFields(fields map[string]interface{}) *ZapLogger {
+func (l *ZeroLogger) WithFields(fields map[string]interface{}) *ZeroLogger {
 	logCtx := l.logger.With()
 	for k, v := range fields {
 		logCtx = logCtx.Interface(k, v)
 	}
-	return &ZapLogger{
+	return &ZeroLogger{
 		logger: logCtx.Logger(),
 	}
 }
@@ -165,7 +165,7 @@ type AccessLog struct {
 }
 
 // LogAccess 记录访问日志
-func (l *ZapLogger) LogAccess(log AccessLog) {
+func (l *ZeroLogger) LogAccess(log AccessLog) {
 	event := l.logger.Info().
 		Str("type", "access").
 		Str("protocol", log.Protocol).
@@ -189,11 +189,11 @@ func (l *ZapLogger) LogAccess(log AccessLog) {
 }
 
 // Global 全局日志实例
-var Global *ZapLogger
+var Global *ZeroLogger
 
 // InitGlobal 初始化全局日志实例
-func InitGlobal(cfg *ZapLoggerConfig) error {
-	logger, err := NewZapLogger(cfg)
+func InitGlobal(cfg *ZeroLoggerConfig) error {
+	logger, err := NewZeroLogger(cfg)
 	if err != nil {
 		return err
 	}
