@@ -21,21 +21,19 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"context"
-	ctls "crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/aberstone/fingertls/transport"
 	"github.com/aberstone/fingertls/transport/tls"
 	"github.com/aberstone/fingertls/transport/tls/fingerprint"
 	"github.com/andybalholm/brotli"
 	"github.com/elazarl/goproxy"
-	utls "github.com/refraction-networking/utls"
-	"golang.org/x/net/http2"
 )
 
 func newHttpTransport(upstreamProxy *url.URL) (transport *http.Transport) {
@@ -87,40 +85,14 @@ func handleHttpsRequest(rawRequest *http.Request, upstreamProxy *url.URL) (*http
 	dialer := tls.NewTLSDialer(
 		tls.WithSpecFactory(fingerprint.GetDefaultClientHelloSpec),
 		tls.WithUpstreamProxy(upstreamProxy),
-		tls.WithProxyTimeout(30),
+		tls.WithProxyTimeout(30*time.Second),
+		tls.WithTimeout(30*time.Second),
 	)
 
-	uconn, _ := dialer.DialTLS(context.TODO(), "tcp", rawRequest.URL.Hostname()+":443")
+	fhTr := transport.NewFingerHttpsTransport(dialer)
 
-	// 创建自定义transport并发送请求
-	var customTransport http.RoundTripper
-	uconnTyped, ok := uconn.(*utls.UConn)
-	if !ok {
-		return nil, fmt.Errorf("unexpected connection type: %T", uconn)
-	}
-	if uconnTyped.ConnectionState().NegotiatedProtocol == "h2" {
-		newReq.Proto = "HTTP/2.0"
-		newReq.ProtoMajor = 2
-		newReq.ProtoMinor = 0
-		customTransport = &http2.Transport{
-			DialTLSContext: func(ctx context.Context, network, addr string, cfg *ctls.Config) (net.Conn, error) {
-				return uconn, nil
-			},
-		}
-	} else {
-		newReq.Proto = "HTTP/1.1"
-		newReq.ProtoMajor = 1
-		newReq.ProtoMinor = 0
-		customTransport = &http.Transport{
-			DialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return uconn, nil
-			},
-		}
-	}
-
-	client := &http.Client{Transport: customTransport}
+	client := &http.Client{Transport: fhTr}
 	resp, err := client.Do(newReq)
-	fmt.Println(resp.Proto, resp.ProtoMajor, resp.ProtoMinor)
 	if err != nil {
 		return nil, err
 	}
