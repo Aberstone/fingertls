@@ -4,6 +4,15 @@
 
 此项目遵循[语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [0.3.1-alpha] - 2025-04-09
+
+### 新增
+- 实现FingerHttpsTransport，实现了 http.RoundTripper 接口
+  - 自动处理兼容HTTP/1.1和HTTP/2协议
+
+### 修改
+- examples 中 mitm_with_tls 的反例改用 FingerHttpsTransport 实现
+
 ## [0.3.0-alpha] - 2025-04-09
 
 ### 架构
