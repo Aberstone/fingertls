@@ -40,7 +40,10 @@ func NewFingerHttpsTransport(dialer tls.ITLSDialer) *FingerHttpsTransport {
 
 func (t *FingerHttpsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	hostWithPort := req.URL.Hostname() + ":" + req.URL.Port()
-	tlsConn, _ := t.dialer.DialTLS(req.Context(), "tcp", hostWithPort)
+	tlsConn, err := t.dialer.DialTLS(req.Context(), "tcp", hostWithPort)
+	if err != nil {
+		return nil, err
+	}
 	var tripper http.RoundTripper
 	switch tlsConn.(*utls.UConn).ConnectionState().NegotiatedProtocol {
 	case "h2":
